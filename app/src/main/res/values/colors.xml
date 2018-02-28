@@ -1,6 +1,81 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+
+    <!-- 基本カラー -->
+    <color name="base_black">#000000</color>
+    <color name="base_very_dark_gray">#262626</color>
+    <color name="base_dark_gray">#595959</color>
+    <color name="base_gray">#8c8c8c</color>
+    <color name="base_medium_gray">#a6a6a6</color>
+    <color name="base_light_gray">#cccccc</color>
+    <color name="base_high_light_gray">#d7d7d7</color>
+    <color name="base_very_light_gray">#ededed</color>
+    <color name="base_background_gray">#f1f1f1</color>
+    <color name="base_mostly_white">#fbfbfb</color>
+    <color name="base_white">#ffffff</color>
+    <color name="base_eight_blue">#48a1e3</color>
+    <color name="base_light_blue">#f6fafd</color>
+    <color name="base_eight_red">#ff6752</color>
+    <color name="base_light_red">#ffefed</color>
+
+    <!-- その他 -->
+    <color name="side_select_color">#ff286690</color>
+
+    <color name="activity_splash_background_color">#1d1d1d</color>
+    <color name="activity_eight_camera_shadow_color">#A0000000</color>
+    <color name="button_blue_pressed_color">#3F8EC9</color>
+    <color name="button_pink_pressed_color">#f58d7b</color>
+    <color name="button_pink_default_color">#ff6752</color>
+    <color name="button_gmail_pressed_color">#E46F61</color>
+    <color name="button_gmail_default_color">#dd4b39</color>
+    <color name="button_facebook_disable_color">#f5fafc</color>
+    <color name="button_facebook_pressed_color">#1F2439</color>
+    <color name="button_facebook_default_color">#39589a</color>
+    <color name="edittext_before_login_background_color">#f1f1f1</color>
+    <color name="edittext_before_login_stroke_color">#c3c3c3</color>
+    <color name="edittext_before_login_text_color">#555555</color>
+    <color name="edittext_before_login_text_hint_color">#808080</color>
+    <color name="edittext_before_login_text_shadow_color">#ffffff</color>
+    <color name="eight_title_black">#454545</color>
+    <color name="eight_black">#585858</color>
+    <color name="eight_gray">#a0a0a0</color>
+    <color name="eight_light_gray">#b4b4b4</color>
+    <color name="eight_high_light_gray">#d5d5d5</color>
+    <color name="eight_photo_gray">#E8E8E8</color>
+    <color name="eight_middle_gray">#E8E8E8</color>
+    <color name="eight_text_blue">#1F5381</color>
+    <color name="eight_text_dark_gray">#313131</color>
+    <color name="eight_text_gray">#464646</color>
+    <color name="eight_text_right_gray">#888888</color>
+    <color name="gray_button_background">#E6E6E6</color>
+    <color name="gray_button_pushed_background">#FFFFFF</color>
+    <color name="gray_button_stroke">#B4B4B4</color>
+    <color name="gray_button_text">#636363</color>
+    <color name="list_background">#F4F4F4</color>
+    <color name="list_separator">#DEDEDE</color>
+    <color name="list_title_background">#E6E6E6</color>
+    <color name="list_footer_background">#EEEEEE</color>
+    <color name="list_footer_text">#A0A0A0</color>
+    <color name="brownish_grey">#666666</color>
+
+    <color name="textinput_error_color">#FFDD2C00</color>
+    <color name="badge_red_stroke_color">#ca2626</color>
+    <color name="fragment_top_background_color">#ededed</color>
+    <color name="activity_default_background_color">#eeeeee</color>
+
+    <color name="holo_blue_light">#ff33b5e5</color>
+
+    <color name="mostly_white">#fafafa</color>
+
+    <color name="open_search_gray_text_color">#A1A1A1</color>
+
+    <color name="card_add_button_color">#ff307caf</color>
+
+    <color name="dark_home_icon_color">#ff286690</color>
+
+    <color name="background_white">#ffffff</color>
+    <color name="background_gray">#f2f2f2</color>
+
+    <color name="indicator_on_pink">#ff6953</color>
+
 </resources>

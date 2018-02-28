@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">EightCardAnimationExample</string>
     <string name="action_settings">Settings</string>
+
+
+    <string name="activity_smart_capture_confirm_delete_text">削除する</string>
+    <string name="activity_smart_capture_confirm_add_button">そのまま追加</string>
 </resources>
