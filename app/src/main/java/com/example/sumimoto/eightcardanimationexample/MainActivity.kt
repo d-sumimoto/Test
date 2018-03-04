@@ -6,6 +6,8 @@ import android.animation.ObjectAnimator
 import android.graphics.Point
 import android.os.Build
 import android.os.Bundle
+import android.support.constraint.ConstraintLayout
+import android.support.constraint.ConstraintSet
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.CardView
 import android.util.Log
@@ -14,8 +16,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewTreeObserver
 import android.widget.*
-import kotlinx.android.synthetic.main.activity_main.*
-import rx.Observable
 import rx.subjects.BehaviorSubject
 
 
@@ -27,6 +27,7 @@ class MainActivity : AppCompatActivity() {
     private val linkButton by lazy { findViewById(R.id.linkContainer) as View }
     private val addButton by lazy { findViewById(R.id.addContainer) as View }
 
+    private val cardViewContainer by lazy { findViewById(R.id.cardViewContainer) as ConstraintLayout }
 
     private val list: List<Boolean> = listOf(false, false, true, false)
 
@@ -54,21 +55,37 @@ class MainActivity : AppCompatActivity() {
         }
 
     private fun initViews() {
-        val cardViewsObsevable = Observable.from(cardViews)
+//        val cardViewsObsevable = Observable.from(cardViews)
 
         findViewById(R.id.cardViewImage1).runOnAfterLayout {
-            Observable.zip(cardViewsObsevable, cardViewsObsevable.skip(1), { t1, t2 -> t1 to t2 })
-                    .subscribe {
-                        val cardImageView1 = it.first.second
-                        val cardImageView2 = it.second.second
-                        val cardView1 = it.first.first
-                        val cardView2 = it.second.first
-                        cardImageView2.layoutParams = cardImageView2.layoutParams.apply {
-                            height = (cardImageView1.height * 0.9f).toInt()
-                            width = (cardImageView1.width * 0.9f).toInt()
-                            cardView2.translationY = cardView1.translationY + (ViewUtils.dpToPx(this@MainActivity, 16)).toFloat()
-                        }
-                    }
+            //            Observable.zip(cardViewsObsevable, cardViewsObsevable.skip(1), { t1, t2 -> t1 to t2 })
+//                    .subscribe {
+//                        val cardImageView1 = it.first.second
+//                        val cardImageView2 = it.second.second
+//                        val cardView1 = it.first.first
+//                        val cardView2 = it.second.first
+//                        cardImageView2.layoutParams = cardImageView2.layoutParams.apply {
+//                            val scale = Math.pow(0.9, index)
+//                            height = (cardImageView1.height * 0.9f).toInt()
+//                            width = (cardImageView1.width * 0.9f).toInt()
+//                            cardView2.translationY = cardView1.translationY + (ViewUtils.dpToPx(this@MainActivity, 16)).toFloat()
+//                        }
+//                    }
+            cardViews.forEachIndexed { index, pair ->
+                val cardImageView1 = pair.second
+                val cardImageView2 = pair.second
+                val cardView1 = pair.first
+                val cardView2 = pair.first
+
+                val scale = Math.pow(0.9, index.toDouble())
+
+                val constraintSet = ConstraintSet()
+                constraintSet.clone(cardViewContainer)
+                constraintSet.constrainWidth(pair.second.id, (cardLongSidePx * scale).toInt())
+                constraintSet.constrainHeight(pair.second.id, (cardLongSidePx * scale).toInt())
+                constraintSet.applyTo(cardViewContainer)
+//                    cardView2.translationY = cardView1.translationY + (ViewUtils.dpToPx(this@MainActivity, 16)).toFloat()
+            }
         }
     }
 
@@ -76,51 +93,53 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val cardViewPairs: List<Pair<CardView, ImageView>> = cardViews
         initViews()
+        nextButton.setOnClickListener { animateViews() }
+        addButton.setOnClickListener { animateViews() }
+    }
 
-        fab.setOnClickListener {
+    private fun animateViews() {
+        val cardViewPairs: List<Pair<CardView, ImageView>> = cardViews
 
-            val targetPair = cardViewPairs[num.value]
-            val targetCardView = targetPair.first
+        val targetPair = cardViewPairs[num.value]
+        val targetCardView = targetPair.first
 
-            val location = intArrayOf(0, 0)
-            targetCardView.getLocationOnScreen(location)
+        val location = intArrayOf(0, 0)
+        targetCardView.getLocationOnScreen(location)
 
-            val isVertical = list[num.value]
-            val transitionYValue = ((location[1] + if (isVertical) targetCardView.width else targetCardView.height) * -1).toFloat()
-            val hasNext = list.size - 1 > num.value
-            val animators = listOf(
-                    createFrontCardTransitionYAnimation(targetCardView, transitionYValue),
-                    if (hasNext) createNextCardAnimation(list[num.value + 1], cardViewPairs[num.value + 1].first) else null,
-                    if (hasNext) createBackCardsScaleAnimation() else null
-            ).filterNotNull()
+        val isVertical = list[num.value]
+        val transitionYValue = ((location[1] + if (isVertical) targetCardView.width else targetCardView.height) * -1).toFloat()
+        val hasNext = list.size - 1 > num.value
+        val animators = listOf(
+                createFrontCardTransitionYAnimation(targetCardView, transitionYValue),
+                if (hasNext) createNextCardAnimation(list[num.value + 1], cardViewPairs[num.value + 1].first) else null,
+                if (hasNext) createBackCardsScaleAnimation() else null
+        ).filterNotNull()
 
-            val animationSet = AnimatorSet()
-            animationSet.playTogether(animators)
-            animationSet.duration = 300
-            animationSet.addListener(object : Animator.AnimatorListener {
-                override fun onAnimationRepeat(animation: Animator?) = Unit
-                override fun onAnimationCancel(animation: Animator?) = Unit
+        val animationSet = AnimatorSet()
+        animationSet.playTogether(animators)
+        animationSet.duration = 300
+        animationSet.addListener(object : Animator.AnimatorListener {
+            override fun onAnimationRepeat(animation: Animator?) = Unit
+            override fun onAnimationCancel(animation: Animator?) = Unit
 
-                override fun onAnimationStart(animation: Animator?) {
-                    // フェードで隠す
-                    fadeViews.forEach { it.animate().alpha(0.0F).setDuration(300).start() }
+            override fun onAnimationStart(animation: Animator?) {
+                // フェードで隠す
+                fadeViews.forEach { it.animate().alpha(0.0F).setDuration(300).start() }
+            }
+
+            override fun onAnimationEnd(animation: Animator?) {
+                // フェードで表示
+                fadeViews.forEach { it.animate().alpha(1.0F).setDuration(300).start() }
+
+                num.onNext(num.value + 1)
+                if (cardViewPairs.size <= num.value) {
+                    num.onNext(0)
+                    Toast.makeText(this@MainActivity, "〜終わり〜", Toast.LENGTH_SHORT).show()
                 }
-
-                override fun onAnimationEnd(animation: Animator?) {
-                    // フェードで表示
-                    fadeViews.forEach { it.animate().alpha(1.0F).setDuration(300).start() }
-
-                    num.onNext(num.value + 1)
-                    if (cardViewPairs.size <= num.value) {
-                        num.onNext(0)
-                        Toast.makeText(this@MainActivity, "〜終わり〜", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            })
-            animationSet.start()
-        }
+            }
+        })
+        animationSet.start()
     }
 
     private fun createBackCardsScaleAnimation(): AnimatorSet {
