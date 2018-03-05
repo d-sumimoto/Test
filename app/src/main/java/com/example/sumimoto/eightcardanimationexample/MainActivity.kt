@@ -3,14 +3,13 @@ package com.example.sumimoto.eightcardanimationexample
 import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.graphics.Point
 import android.os.Build
 import android.os.Bundle
 import android.support.constraint.ConstraintLayout
 import android.support.constraint.ConstraintSet
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.CardView
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -31,12 +30,12 @@ class MainActivity : AppCompatActivity() {
 
     private val list: List<Boolean> = listOf(false, false, true, false)
 
-    private val cardViews by lazy {
+    private val cardImageViews by lazy {
         listOf(
-                findViewById(R.id.cardView1) as CardView to findViewById(R.id.cardViewImage1) as ImageView,
-                findViewById(R.id.cardView2) as CardView to findViewById(R.id.cardViewImage2) as ImageView,
-                findViewById(R.id.cardView3) as CardView to findViewById(R.id.cardViewImage3) as ImageView,
-                findViewById(R.id.cardView4) as CardView to findViewById(R.id.cardViewImage4) as ImageView)
+                findViewById(R.id.cardViewImage1) as ImageView,
+                findViewById(R.id.cardViewImage2) as ImageView,
+                findViewById(R.id.cardViewImage3) as ImageView,
+                findViewById(R.id.cardViewImage4) as ImageView)
     }
 
     private val fadeViews by lazy {
@@ -50,41 +49,23 @@ class MainActivity : AppCompatActivity() {
             windowManager.defaultDisplay.let {
                 val point = Point()
                 it.getSize(point)
-                return (point.x * 0.7).toInt()
+                return point.x - ViewUtils.dpToPx(this@MainActivity, 52) * 2
             }
         }
 
+    private val cardImageViewTopMargin by lazy { ViewUtils.dpToPx(this@MainActivity, 8) }
+
     private fun initViews() {
-//        val cardViewsObsevable = Observable.from(cardViews)
-
-        findViewById(R.id.cardViewImage1).runOnAfterLayout {
-            //            Observable.zip(cardViewsObsevable, cardViewsObsevable.skip(1), { t1, t2 -> t1 to t2 })
-//                    .subscribe {
-//                        val cardImageView1 = it.first.second
-//                        val cardImageView2 = it.second.second
-//                        val cardView1 = it.first.first
-//                        val cardView2 = it.second.first
-//                        cardImageView2.layoutParams = cardImageView2.layoutParams.apply {
-//                            val scale = Math.pow(0.9, index)
-//                            height = (cardImageView1.height * 0.9f).toInt()
-//                            width = (cardImageView1.width * 0.9f).toInt()
-//                            cardView2.translationY = cardView1.translationY + (ViewUtils.dpToPx(this@MainActivity, 16)).toFloat()
-//                        }
-//                    }
-            cardViews.forEachIndexed { index, pair ->
-                val cardImageView1 = pair.second
-                val cardImageView2 = pair.second
-                val cardView1 = pair.first
-                val cardView2 = pair.first
-
+        findViewById(R.id.cardViewContainer).runOnAfterLayout { container ->
+            cardImageViews.forEachIndexed { index, imageView ->
                 val scale = Math.pow(0.9, index.toDouble())
+                val ratio = imageView.height.toFloat() / imageView.width.toFloat()
 
                 val constraintSet = ConstraintSet()
                 constraintSet.clone(cardViewContainer)
-                constraintSet.constrainWidth(pair.second.id, (cardLongSidePx * scale).toInt())
-                constraintSet.constrainHeight(pair.second.id, (cardLongSidePx * scale).toInt())
+                constraintSet.constrainWidth(imageView.id, (container.width * scale).toInt())
+                constraintSet.constrainHeight(imageView.id, (container.height * scale * ratio).toInt())
                 constraintSet.applyTo(cardViewContainer)
-//                    cardView2.translationY = cardView1.translationY + (ViewUtils.dpToPx(this@MainActivity, 16)).toFloat()
             }
         }
     }
@@ -99,22 +80,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun animateViews() {
-        val cardViewPairs: List<Pair<CardView, ImageView>> = cardViews
-
-        val targetPair = cardViewPairs[num.value]
-        val targetCardView = targetPair.first
+        val imageView = cardImageViews[num.value]
 
         val location = intArrayOf(0, 0)
-        targetCardView.getLocationOnScreen(location)
+        imageView.getLocationOnScreen(location)
+        val displayWidth = location[1]
 
-        val isVertical = list[num.value]
-        val transitionYValue = ((location[1] + if (isVertical) targetCardView.width else targetCardView.height) * -1).toFloat()
-        val hasNext = list.size - 1 > num.value
-        val animators = listOf(
-                createFrontCardTransitionYAnimation(targetCardView, transitionYValue),
-                if (hasNext) createNextCardAnimation(list[num.value + 1], cardViewPairs[num.value + 1].first) else null,
-                if (hasNext) createBackCardsScaleAnimation() else null
-        ).filterNotNull()
+        val currentCardIndex = num.value
+        val nextCardIndex = num.value + 1
+
+        val isVertical = list[currentCardIndex]
+        val transitionYValue = ((displayWidth + if (isVertical) imageView.width else imageView.height) * -1).toFloat()
+        val hasNext = list.size - 1 > currentCardIndex
+        val animators = listOfNotNull(
+                createFrontCardTransitionYAnimation(imageView, transitionYValue),
+                if (hasNext) createNextCardAnimation(nextCardIndex, list[nextCardIndex], cardImageViews[nextCardIndex]) else null,
+                if (hasNext) createBackCardsScaleAnimation() else null)
 
         val animationSet = AnimatorSet()
         animationSet.playTogether(animators)
@@ -132,8 +113,8 @@ class MainActivity : AppCompatActivity() {
                 // フェードで表示
                 fadeViews.forEach { it.animate().alpha(1.0F).setDuration(300).start() }
 
-                num.onNext(num.value + 1)
-                if (cardViewPairs.size <= num.value) {
+                num.onNext(nextCardIndex)
+                if (cardImageViews.size <= num.value) {
                     num.onNext(0)
                     Toast.makeText(this@MainActivity, "〜終わり〜", Toast.LENGTH_SHORT).show()
                 }
@@ -145,10 +126,7 @@ class MainActivity : AppCompatActivity() {
     private fun createBackCardsScaleAnimation(): AnimatorSet {
         val animators = mutableListOf<Animator>()
         (num.value + 1 until 4).forEachIndexed { index, i ->
-            val scale = 1f - 10.1f * (index + 1)
-            Log.d("@@", "$index, $i, $scale")
-
-            animators.add(createScaleAnimation(cardViews[i].first, 1f - 0.1f * index))
+            animators.add(createScaleAnimation(index, cardImageViews[i]))
         }
         return AnimatorSet().apply { playTogether(animators) }
     }
@@ -156,27 +134,42 @@ class MainActivity : AppCompatActivity() {
     private fun createFrontCardTransitionYAnimation(target: View, transitionYValue: Float) =
             ObjectAnimator.ofFloat(target, "translationY", transitionYValue)
 
-    private fun createNextCardAnimation(needRotate: Boolean, target: View): AnimatorSet {
+    private fun createNextCardAnimation(index: Int, needRotate: Boolean, target: View): AnimatorSet {
         val animationSet = AnimatorSet()
         animationSet.duration = 200
         if (needRotate) {
             animationSet.playTogether(
-//                    ObjectAnimator.ofFloat(target, "translationY", -30f),
-                    createScaleAnimation(target, 1f),
+                    ObjectAnimator.ofFloat(target, "translationY", (cardImageViewTopMargin * -1).toFloat()),
+                    createScaleAnimation(index, target),
                     ObjectAnimator.ofFloat(target, "rotation", 90f))
         } else {
             animationSet.playTogether(
-//                    ObjectAnimator.ofFloat(target, "translationY", -30f),
-                    createScaleAnimation(target, 1f))
+                    ObjectAnimator.ofFloat(target, "translationY", (cardImageViewTopMargin * -1).toFloat()),
+                    createScaleAnimation(index, target))
         }
         return animationSet
     }
 
-    private fun createScaleAnimation(target: View, scale: Float): AnimatorSet {
+    private fun createScaleAnimation(index: Int, target: View): AnimatorSet {
         return AnimatorSet().apply {
+            val scale = Math.pow(0.9, index.toDouble())
+            val ratio = target.height.toFloat() / target.width.toFloat()
+
             playTogether(
-                    ObjectAnimator.ofFloat(target, "scaleX", scale),
-                    ObjectAnimator.ofFloat(target, "scaleY", scale)
+                    ValueAnimator.ofInt(target.width, (cardLongSidePx * scale).toInt()).apply {
+                        addUpdateListener { valueAnimator ->
+                            target.layoutParams = target.layoutParams.apply {
+                                width = valueAnimator.animatedValue as Int
+                            }
+                        }
+                    },
+                    ValueAnimator.ofInt(target.height, (cardLongSidePx * ratio * scale).toInt()).apply {
+                        addUpdateListener { valueAnimator ->
+                            target.layoutParams = target.layoutParams.apply {
+                                height = valueAnimator.animatedValue as Int
+                            }
+                        }
+                    }
             )
         }
     }
